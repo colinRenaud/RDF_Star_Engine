@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -20,13 +19,11 @@ import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
 
-import Dictionary.Dictionnary;
-import Dictionary.HashMapDictionnary;
-import Dictionary.PatriciaTrieDictionary;
+import Dictionary.Dictionary;
 
 public class DictionaryTest {
 	
-	private static ArrayList<String> termList;
+	private static Collection<String> termList;
 	
 	@BeforeClass
 	public static void setup() throws RDFParseException, RDFHandlerException, IOException {
@@ -37,33 +34,17 @@ public class DictionaryTest {
 		rdfParser.setRDFHandler(listenner);
 		rdfParser.parse(reader, "");
 		reader.close();
-		termList = listenner.getTerms();
+		termList = listenner.getTerms().keySet();
 		System.out.println("Reading data [OK]");	
 
 	}
 
-	@Test
-	public void testHashMapAssociation(){
-		String[] uris = {"alice","parentOf","bob","knows"};
-		
-		Dictionnary dico = new HashMapDictionnary(Arrays.asList(uris));
-		assert(dico.getIntegerId("alice")==0);
-		assert(dico.getIntegerId("bob")==1);
-		assert(dico.getIntegerId("parentOf")==3);
-		assert(dico.getIntegerId("knows")==2);
-		
-		assert(dico.getStringId(0).equals("alice"));
-		assert(dico.getStringId(1).equals("bob"));
-		assert(dico.getStringId(2).equals("knows"));
-		assert(dico.getStringId(3).equals("parentOf"));
-
-	}
 	
 	@Test
 	public void testPatriciaTrieAssociation(){
 		String[] uris = {"alice","parentOf","bob","knows"};
-		
-		Dictionnary dico = new PatriciaTrieDictionary(Arrays.asList(uris));
+
+		Dictionary dico = new Dictionary(Arrays.asList(uris));
 		assert(dico.getIntegerId("alice")==0);
 		assert(dico.getIntegerId("bob")==1);
 		assert(dico.getIntegerId("parentOf")==3);
@@ -77,31 +58,21 @@ public class DictionaryTest {
 	
 	@Test
 	public void testPerformances() {
-		Instant t1 = Instant.now();
-		Dictionnary mapDico = new HashMapDictionnary(termList);
-		System.out.println("HashMapDico Building time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
-		
-		t1 = Instant.now();
-		Dictionnary trieDico = new PatriciaTrieDictionary(termList);
+		Instant t1 = Instant.now();		
+		Dictionary trieDico = new Dictionary(termList);
 		System.out.println("PatriciaTrieDico Building time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 		
-		List<String> uris= mapDico.getURIs();
-		List<String> uris2= trieDico.getURIs();
-		Collection<Integer> ids = mapDico.getIds();
-		Collection<Integer> ids2 = trieDico.getIds();
-//		assert(uris.equals(uris2));
-//		assert(ids.containsAll(ids2));
-		
-		t1 = Instant.now();
-		for(String uri : uris) {
-			mapDico.getIntegerId(uri);
-		}
-		System.out.println("HashMapDico mapping time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
+	
+		List<String> uris= trieDico.getURIs();
+		Collection<Integer> ids = trieDico.getIds();	
+		System.out.println(uris.size() + ":"+ids.size());
 
 		t1 = Instant.now();
-		for(String uri : uris) {
-			trieDico.getIntegerId(uri);
-		}
+		for(int i=0;i<5;i++){
+			for(String uri : uris) {
+				trieDico.getIntegerId(uri);
+			}
+		}	
 		System.out.println("PatriciaTrieDico mapping time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 
 	}
