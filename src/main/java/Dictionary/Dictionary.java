@@ -3,6 +3,8 @@ package Dictionary;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
@@ -55,6 +57,10 @@ public class Dictionary {
 	
 	public Collection<Integer> getIds() {
 		return uriToIds.values();
+	}
+	
+	public Set<String> getIndexEntries() {
+		return uriToIds.keySet();
 	}
 
 	

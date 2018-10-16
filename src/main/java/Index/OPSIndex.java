@@ -1,35 +1,41 @@
 package Index;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import Dictionary.Dictionary;
 
-public class OPSIndex implements Index{
+public class OPSIndex extends Index{
 	
-	private TreeMap<Integer,TreeMap<Integer,TreeSet<Integer>>> index;
+	private Map<Integer,Map<Integer,Set<Integer>>> index;
 	private int nbTriple;
 	
 	public OPSIndex(Dictionary dico, ArrayList<ArrayList<String>> triples){
-		index = new TreeMap<>();
-		nbTriple = 0;
 		
-		for(ArrayList<String> triple: triples){
-			Integer obj = dico.getIntegerId(triple.get(0));
-			Integer pred = dico.getIntegerId(triple.get(1));
-			Integer subj = dico.getIntegerId(triple.get(2));
-			index.putIfAbsent(obj, new TreeMap<>());
-			TreeMap<Integer,TreeSet<Integer>> objMap = index.get(obj);
+		assert(triples.size() == 3);
+		assert(triples.get(0).size()==triples.get(1).size());
+		assert(triples.get(0).size()==triples.get(2).size());
+
+		index = new HashMap<>();
+		nbTriple = 0;
+		for(int i=0;i<triples.get(0).size();i++) {
+			Integer obj = dico.getIntegerId(triples.get(0).get(i));
+			Integer pred = dico.getIntegerId(triples.get(1).get(i));
+			Integer subj = dico.getIntegerId(triples.get(2).get(i));
+			index.putIfAbsent(obj, new HashMap<>());
+			Map<Integer,Set<Integer>> objMap = index.get(obj);
 			objMap.putIfAbsent(pred, new TreeSet<>());
 			objMap.get(pred).add(subj);
 			nbTriple++;
-		}	
+		}
 	}
 
 
 	@Override
-	public TreeMap<Integer, TreeMap<Integer, TreeSet<Integer>>> getDatas() {
+	public Map<Integer,Map<Integer, Set<Integer>>> getDatas() {
 		return index;
 	}
 

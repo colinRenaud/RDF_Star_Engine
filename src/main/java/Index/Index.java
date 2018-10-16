@@ -1,31 +1,32 @@
 package Index;
 
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.Set;
 
-public interface Index {
+public abstract class Index {
 	
-	TreeMap<Integer,TreeMap<Integer,TreeSet<Integer>>> getDatas();
+	abstract Map<Integer,Map<Integer,Set<Integer>>> getDatas();
 	
-	int nbTriple();
+	public abstract int nbTriple();
 	
-	public default TreeSet<Integer> get(Integer key1, Integer key2){
-		TreeMap<Integer,TreeMap<Integer,TreeSet<Integer>>> datas = this.getDatas();
+	public Set<Integer> get(Integer key1, Integer key2){
+		Map<Integer,Map<Integer,Set<Integer>>> datas = this.getDatas();
 		return datas.get(key1).get(key2);
 	}
+	
+	
 		
 	public static void displayDatas(Index index){
-		TreeMap<Integer,TreeMap<Integer,TreeSet<Integer>>> datas = index.getDatas();
+		Map<Integer,Map<Integer,Set<Integer>>> datas = index.getDatas();
 		for(Integer k : datas.keySet()){
-			TreeMap<Integer,TreeSet<Integer>> v = datas.get(k);
+			Map<Integer,Set<Integer>> v = datas.get(k);
 			for(Integer k2 : v.keySet()){
-				TreeSet<Integer> v2 = v.get(k2);
+				Set<Integer> v2 = v.get(k2);
 				for(Integer k3 : v2){
 					System.out.println(k+":"+k2+":"+k3);
 				}
 			}
-		}
-			
+		}			
 	}
 
 }

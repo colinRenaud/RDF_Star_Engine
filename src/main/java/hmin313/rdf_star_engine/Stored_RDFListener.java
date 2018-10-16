@@ -10,6 +10,7 @@ public class Stored_RDFListener extends RDFHandlerBase{
 	
 	private PatriciaTrie<Integer> terms;
 	private ArrayList<ArrayList<String>> triples;
+	private long totalSize;
 	
 	public Stored_RDFListener() {
 		terms = new PatriciaTrie<>();
@@ -17,20 +18,21 @@ public class Stored_RDFListener extends RDFHandlerBase{
 		for(int i=0;i<3;i++){
 			triples.add(new ArrayList<>());
 		}
+		totalSize = 0;
 	}
 	
 	@Override
 	public void handleStatement(Statement st) {
 		String subj = st.getSubject().toString();
 		String pred = st.getPredicate().toString();
-		String obj = st.getObject().toString();
-		
+		String obj = st.getObject().toString();		
 		triples.get(0).add(subj);
 		triples.get(1).add(pred);
 		triples.get(2).add(obj);
 		terms.put(subj,0);
 		terms.put(pred,0);
-		terms.put(obj,0);		
+		terms.put(obj,0);	
+		totalSize += (subj.length() + pred.length() + obj.length());
 	}
 
 	
@@ -42,6 +44,12 @@ public class Stored_RDFListener extends RDFHandlerBase{
 	public ArrayList<ArrayList<String>> getTriples() {
 		return triples;
 	}
+
+	public long getTotalSize() {
+		return totalSize;
+	}
+	
+	
 	
 	
 

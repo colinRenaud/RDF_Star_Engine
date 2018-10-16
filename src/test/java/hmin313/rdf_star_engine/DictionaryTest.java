@@ -1,7 +1,5 @@
 package hmin313.rdf_star_engine;
 
-
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -24,10 +22,11 @@ import Dictionary.Dictionary;
 public class DictionaryTest {
 	
 	private static Collection<String> termList;
-	
+
 	@BeforeClass
 	public static void setup() throws RDFParseException, RDFHandlerException, IOException {
 		System.out.println("Reading data [Start]");	
+		Instant t1 = Instant.now();
 		Reader reader = new FileReader("data/500K.rdfxml");
 		RDFParser rdfParser = Rio.createParser(RDFFormat.RDFXML);
 		Stored_RDFListener listenner = new Stored_RDFListener();
@@ -35,7 +34,20 @@ public class DictionaryTest {
 		rdfParser.parse(reader, "");
 		reader.close();
 		termList = listenner.getTerms().keySet();
-		System.out.println("Reading data [OK]");	
+		int totalSize = 0;
+		for(String term : termList) {
+			totalSize += term.length();
+		}
+		System.out.println("\tDataset size:"+totalSize+"B\n");
+		System.out.println("\tReading time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
+
+		totalSize = 0;
+		Dictionary dico = new Dictionary(listenner.getTerms());
+		for(String indexKey : dico.getIndexEntries()) {
+			totalSize += indexKey.length();
+		}
+//		System.out.println("\tIndexed Dataset size:"+totalSize+"B\n");
+		System.out.println("\tIndex build time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 
 	}
 
@@ -68,11 +80,9 @@ public class DictionaryTest {
 		System.out.println(uris.size() + ":"+ids.size());
 
 		t1 = Instant.now();
-		for(int i=0;i<5;i++){
-			for(String uri : uris) {
-				trieDico.getIntegerId(uri);
-			}
-		}	
+		for(String uri : uris) {
+			trieDico.getIntegerId(uri);
+		}
 		System.out.println("PatriciaTrieDico mapping time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 
 	}
