@@ -52,8 +52,8 @@ public class Query {
 	
 	public void querying(Index index) {
 		
-		for(int cpt = 0; cpt <= propertyIds.size(); cpt++) 
-			subjectIds.add(index.get(propertyIds.get(cpt), objectIds.get(cpt));
+//		for(int cpt = 0; cpt <= propertyIds.size(); cpt++) 
+//			subjectIds.add(index.get(propertyIds.get(cpt), objectIds.get(cpt));
 		
 		unscramble();
 		

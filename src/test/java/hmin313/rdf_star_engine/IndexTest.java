@@ -28,6 +28,7 @@ import Index.POSIndex;
 
 public class IndexTest {
 	
+	private static Dictionary dico;
 	private static Collection<String> termList;
 	private static ArrayList<ArrayList<String>> triples;
 	private static Index posIndex, opsIndex;
@@ -72,13 +73,28 @@ public class IndexTest {
 //		Index.displayDatas(posIndex);
 	}
 	
-	
+	public void testIndexQuerying(){
+		String[][] parts = {
+				{"http://purl.org/dc/terms/Location","http://db.uwaterloo.ca/~galuc/wsdbm/City1"},
+				{"http://schema.org/nationality","http://db.uwaterloo.ca/~galuc/wsdbm/Country24"},
+				{"http://db.uwaterloo.ca/~galuc/wsdbm/gender","http://db.uwaterloo.ca/~galuc/wsdbm/Gender1"},
+				{"http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/Role2"}
+		};
+		
+		for(String[] part : parts){
+			String s1 = part[0];
+			String s2 = part[1];
+			
+		}
+ 
+		
+	}
 	
 	@Test
 	public void testHashOrTreeMap() {
 		
 		Random rand = new Random(516456466556L);
-		int n = 5000000;
+		int n = 1000000;
 		int bound = 2000000000;
 		
 		Set<Integer> m1 = new HashSet<>(n), m2 = new TreeSet<>();
@@ -116,5 +132,7 @@ public class IndexTest {
 		System.out.println("TreeSet get time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 		
 	}
+	
+	
 
 }
