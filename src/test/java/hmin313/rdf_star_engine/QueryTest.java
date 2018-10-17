@@ -7,7 +7,6 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
-import static org.junit.Assert.assertEquals;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -20,10 +19,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import dictionary.Dictionary;
-import index.Index;
-import index.OPSIndex;
-import index.POSIndex;
+import Dictionary.Dictionary;
+import Index.*;
 
 public class QueryTest {
 	
@@ -32,9 +29,9 @@ public class QueryTest {
 	
 	}*/
 	
-		Dictionary dico;
+		public static Dictionary dico;
 	
-		@BeforeClass
+	@BeforeClass
 	public static void setup() throws RDFParseException, RDFHandlerException, IOException {
 		System.out.println("Reading data [Start]");	
 		Instant t1 = Instant.now();
@@ -44,11 +41,7 @@ public class QueryTest {
 		rdfParser.setRDFHandler(listenner);
 		rdfParser.parse(reader, "");
 		reader.close();
-		termList = listenner.getTerms().keySet();
-		int totalSize = 0;
-		for(String term : termList) {
-			totalSize += term.length();
-		}
+		
 		System.out.println("\tDataset size:"+totalSize+"B\n");
 		System.out.println("\tReading time="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 
@@ -58,20 +51,20 @@ public class QueryTest {
 	
 	@Test
 	public void testDicoMatching(){
-	System.out.println("[START]");
-	Instant t1 = Instant.now();
-	queryMain("data/queries/Q_1_eligibleregion.queryset", dico, );
-	System.out.println("Matching "+triple_size+" ids\n"
-				+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
+		System.out.println("[START]");
+		Instant t1 = Instant.now();
+		queryMain("data/queries/Q_1_eligibleregion.queryset", dico, );
+		System.out.println("Matching "+triple_size+" ids\n"
+					+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 	
 	}
 	
 		@Test
 	public void testQuerying(){
 	
-	Instant t1 = Instant.now();
+			Instant t1 = Instant.now();
 	
-	System.out.println("Reading "+triple_size+" triples\n"
+			System.out.println("Reading "+triple_size+" triples\n"
 				+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms [OK]");
 	
 	}
