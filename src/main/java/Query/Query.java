@@ -6,26 +6,31 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import Dictionary.Dictionary;
-import Index.Index;
+import Index.*;
 
 
 public class Query {
 
-	public ArrayList<String> subject;
-	public ArrayList<String> property;
-	public ArrayList<String> object;
+	public ArrayList<Set<String>> subject = new ArrayList<Set<String>>();
+	public ArrayList<String> property = new ArrayList<>();
+	public ArrayList<String> object = new ArrayList<>();
 	
-	public ArrayList<Integer> propertyIds;
-	public ArrayList<Integer> objectIds;
-	public ArrayList<Integer> subjectIds;
+	public ArrayList<Integer> propertyIds = new ArrayList<>();
+	public ArrayList<Integer> objectIds = new ArrayList<>();
+	//Set<String> mySet = new HashSet<String>();
+	public ArrayList<Set<Integer>> subjectIds = new ArrayList<Set<Integer>>();
 	
 	Dictionary dico;
+	Index index;
 	
-	public void queryMain(String path, Dictionary dico, Index index, String displayChoice) {
+	public Query(String path, Dictionary dico, Index index, String displayChoice) {
 		this.dico = dico;
+		this.index = index;
 		
 		queryMaking(path);
 		querying(index);
@@ -52,9 +57,10 @@ public class Query {
 	
 	public void querying(Index index) {
 		
-//		for(int cpt = 0; cpt <= propertyIds.size(); cpt++) 
-//			subjectIds.add(index.get(propertyIds.get(cpt), objectIds.get(cpt));
-		
+		for(int cpt = 1; cpt <= propertyIds.size(); cpt++) {
+			for(Integer t : index.get(propertyIds.get(cpt), objectIds.get(cpt))) { System.out.println("\n" + t); }
+			subjectIds.add(index.get(propertyIds.get(cpt), objectIds.get(cpt)));
+		}
 		unscramble();
 		
 	}
@@ -68,8 +74,11 @@ public class Query {
 //  		String st; 
 	  		for(String st: lines){
 	  			if(st.contains(">")) { // Need a fast checking bc of \t
+	  				st = st.replaceAll("<","");
+	  				st = st.replaceAll(">","");
 					String[] parts = st.split(" ");
-					subject.add(parts[0]);
+					System.out.print(parts[1]);
+					System.out.print(parts[2]);
 					property.add(parts[1]);
 					object.add(parts[2]);
 	  			}
@@ -90,16 +99,20 @@ public class Query {
 		
 		for(String prop : property) 
 			propertyIds.add(dico.getIntegerId(prop));
-		for(String subj : subject) 		
-			subjectIds.add(dico.getIntegerId(subj));
+		for(String obj : object) 		
+			objectIds.add(dico.getIntegerId(obj));
 					
 	}
 	
 	public void unscramble() {
 		
-		for(Integer subj : subjectIds) 
-			subject.add(dico.getStringId(subj));
-		
+		int cpt = 0;
+		for(Set<Integer> subjs : subjectIds) {
+			for(Integer s : subjs) {
+			System.out.println(s);
+			subject.get(cpt).add(dico.getStringId(s)); }
+		}
+		cpt++;
 	}
 	
 	public void displayResults() {
