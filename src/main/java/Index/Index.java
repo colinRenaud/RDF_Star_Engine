@@ -1,5 +1,7 @@
 package Index;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,17 +18,22 @@ public abstract class Index {
 	
 	
 		
-	public static void displayDatas(Index index){
+	public static void displayDatas(Index index,OutputStream out) throws IOException{
+		StringBuilder sb = new StringBuilder();
 		Map<Integer,Map<Integer,Set<Integer>>> datas = index.getDatas();
 		for(Integer k : datas.keySet()){
+			
 			Map<Integer,Set<Integer>> v = datas.get(k);
 			for(Integer k2 : v.keySet()){
 				Set<Integer> v2 = v.get(k2);
 				for(Integer k3 : v2){
-					System.out.println(k+":"+k2+":"+k3);
+					sb.append(k+":"+k2+":"+k3+"\n");					
 				}
 			}
-		}			
+		}	
+		out.write(sb.toString().getBytes());
 	}
+	
+	
 
 }

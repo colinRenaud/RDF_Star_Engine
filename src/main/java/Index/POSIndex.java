@@ -2,10 +2,9 @@ package Index;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-
 import Dictionary.Dictionary;
 
 public class POSIndex extends Index{
@@ -22,12 +21,12 @@ public class POSIndex extends Index{
 		nbTriple = 0;
 		
 		for(int i=0;i<triples.get(0).size();i++) {
-			Integer obj = dico.getIntegerId(triples.get(0).get(i));
+			Integer subj = dico.getIntegerId(triples.get(0).get(i));
 			Integer pred = dico.getIntegerId(triples.get(1).get(i));
-			Integer subj = dico.getIntegerId(triples.get(2).get(i));
+			Integer obj = dico.getIntegerId(triples.get(2).get(i));
 			index.putIfAbsent(pred, new HashMap<>());
 			Map<Integer,Set<Integer>> predMap = index.get(pred);
-			predMap.putIfAbsent(obj, new TreeSet<>());
+			predMap.putIfAbsent(obj, new HashSet<>());
 			predMap.get(obj).add(subj);
 			nbTriple++;
 		}	
