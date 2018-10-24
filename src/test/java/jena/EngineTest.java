@@ -1,4 +1,4 @@
-package hmin313.rdf_star_engine;
+package jena;
 
 import static org.junit.Assert.assertEquals;
 import java.io.File;
@@ -21,6 +21,7 @@ import org.openrdf.rio.RDFParseException;
 import Query.StarQuery;
 import Query.StarQueryParser;
 import Query.StarQueryResult;
+import hmin313.rdf_star_engine.RDF_StarEngine;
 import jena.JenaQueryEngine;
 
 public class EngineTest {

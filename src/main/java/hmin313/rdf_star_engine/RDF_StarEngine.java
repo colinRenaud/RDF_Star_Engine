@@ -3,6 +3,7 @@ package hmin313.rdf_star_engine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.time.Duration;
@@ -28,6 +29,7 @@ import Index.OPSIndex;
 import Index.POSIndex;
 import Query.StarQuery;
 import Query.StarQueryParser;
+import Query.StarQueryResult;
 
 public class RDF_StarEngine {
 	
@@ -43,7 +45,7 @@ public class RDF_StarEngine {
 	public final static String 
 			EXEC_TIME_FILE = "exec_time.csv", 
 			QUERY_STATS_FILE = "query_stats",
-			QUERY_RESULTS_FILE = "query_results";
+			QUERY_RESULTS_FILE = "query_results.csv";
 	
 
 	/**
@@ -145,11 +147,11 @@ public class RDF_StarEngine {
 	   
 	    for(File file : files) {
 	    	if(file.exists()) {
-	    		file.delete();
-	    	}
-	    	else {
-	    		file.createNewFile();
-	    	}
+	    		file.delete(); }
+	    	
+	    	file.createNewFile();
+	    	
+	    		
 	    }
 	    return files;
 	}
@@ -207,6 +209,7 @@ public class RDF_StarEngine {
 					System.out.println("\t query"+queryNb+" : "+results_size + " answers found, time="+ellapsedTime+"ms");
 				}
 				if(export_results) {
+					exportResult(query,results);
 					
 				}					
 			}
@@ -216,7 +219,17 @@ public class RDF_StarEngine {
 	    }
 	}
 	
-	
+	public void exportResult(StarQuery query,Collection<Integer> results) throws IOException {
+		
+		 FileWriter fw = new FileWriter(outputDir+QUERY_RESULTS_FILE,true);
+		 StarQueryResult sqr = new StarQueryResult(dictionnary,results);
+		 fw.write(query.toOutputString()+"\n\n");
+		 for(String rslt : sqr.getResults()) {
+			 fw.write(rslt+"\n");
+		 }
+		 fw.write("\n");
+		 fw.close();
+	}
 	
 	/**
 	 * 

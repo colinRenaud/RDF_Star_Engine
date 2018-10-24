@@ -61,6 +61,15 @@ public class StarQuery {
 		return sb.toString();
 	}
 	
+	public String toOutputString() {
+		StringBuilder sb=new StringBuilder("SELECT ?s WHERE {");
+		for(int i=0;i<predicates.size();i++) {
+			sb.append("?"+subjectSymbol+" <"+predicates.get(i) +"> <"+objects.get(i) +"> .");
+		}
+		sb.append("}");
+		return sb.toString();
+	}
+	
 	public String getSubjectSymbol() {
 		return subjectSymbol;
 	}
