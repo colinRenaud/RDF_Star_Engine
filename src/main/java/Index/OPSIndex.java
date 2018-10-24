@@ -32,6 +32,7 @@ public class OPSIndex extends Index{
 			objMap.get(pred).add(subj);
 			nbTriple++;
 		}
+		setLength();
 	}
 
 

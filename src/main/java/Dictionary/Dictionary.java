@@ -13,6 +13,8 @@ public class Dictionary {
 	private PatriciaTrie<Integer> uriToIds;
 	private ArrayList<String> idToUris;
 	
+	
+	
 	public Dictionary(Collection<String> datas) {
 		uriToIds = new PatriciaTrie<>();
 		idToUris = new ArrayList<>(datas.size());
@@ -63,6 +65,8 @@ public class Dictionary {
 		return uriToIds.keySet();
 	}
 
-	
+	public long length() {
+		return uriToIds.size();
+	}
 	
 }

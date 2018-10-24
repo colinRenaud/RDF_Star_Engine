@@ -42,7 +42,8 @@ public class App {
         
         try {      	
 			RDF_StarEngine engine = new RDF_StarEngine(dataPath,verbose, export_results, export_stats,workload_time,outputDir);
-			engine.runQueryIn(queryPath);
+			
+			engine.runQueryInDir(queryPath);
 			
 		} catch (RDFParseException | RDFHandlerException | IOException e) {
 			e.printStackTrace();

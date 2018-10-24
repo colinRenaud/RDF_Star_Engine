@@ -29,7 +29,8 @@ public class POSIndex extends Index{
 			predMap.putIfAbsent(obj, new HashSet<>());
 			predMap.get(obj).add(subj);
 			nbTriple++;
-		}	
+		}
+		setLength();
 	}
 
 	@Override

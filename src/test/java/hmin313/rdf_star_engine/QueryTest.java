@@ -12,19 +12,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
-
-import Query.Query2;
 import Query.StarQuery;
 import Query.StarQueryParser;
 import Dictionary.Dictionary;
-import Index.*;
 
 public class QueryTest {
 	

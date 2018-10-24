@@ -7,6 +7,8 @@ import java.util.Set;
 
 public abstract class Index {
 	
+	private long length;
+	
 	abstract Map<Integer,Map<Integer,Set<Integer>>> getDatas();
 	
 	public abstract int nbTriple();
@@ -33,6 +35,22 @@ public abstract class Index {
 		}	
 		out.write(sb.toString().getBytes());
 	}
+	
+	protected void setLength() {
+		length = 0;
+		Map<Integer,Map<Integer,Set<Integer>>> datas = getDatas();
+		for(Integer i : datas.keySet()) {
+			for(Integer j : datas.get(i).keySet()) {
+				Set<Integer> values = datas.get(i).get(j);
+				length += values.size();
+			}
+		}
+	}
+
+	public long getLength() {
+		return length;
+	}
+	
 	
 	
 

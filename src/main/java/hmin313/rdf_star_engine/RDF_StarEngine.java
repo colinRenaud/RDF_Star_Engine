@@ -1,6 +1,7 @@
 package hmin313.rdf_star_engine;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -12,7 +13,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
+import org.apache.commons.io.FilenameUtils;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -41,7 +44,6 @@ public class RDF_StarEngine {
 			EXEC_TIME_FILE = "exec_time.csv", 
 			QUERY_STATS_FILE = "query_stats",
 			QUERY_RESULTS_FILE = "query_results";
-	
 	
 
 	/**
@@ -108,7 +110,7 @@ public class RDF_StarEngine {
 	private void loadData(String path) throws RDFParseException, RDFHandlerException, IOException{   	
 		
 		Instant t1 = Instant.now();
-
+	
 		Reader reader = new FileReader(path);
 		RDFParser rdfParser = Rio.createParser(RDFFormat.RDFXML);
 		Stored_RDFListener listenner = new Stored_RDFListener();
@@ -117,26 +119,21 @@ public class RDF_StarEngine {
 		reader.close();	
 		
 		ArrayList<ArrayList<String>> triples = listenner.getTriples();
-		if(verbose) {
-			File file = new File(path);
-			System.out.println("Reading "+triples.get(0).size()+" triples[OK]\n"
-					+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms, total_size="+file.length()/(1024*1024)+"MB");
-			t1 = Instant.now();
-		}
-					
-		dictionnary = new Dictionary(listenner.getTerms());
-		if(verbose) {			
-			System.out.println("Dictionary Build [OK] \n"
-					+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms, total_size=");
-			t1 = Instant.now();
-		}
 		
+		File file = new File(path);
+		System.out.println("Reading "+triples.get(0).size()+" triples[OK] "
+				+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms, total_size="+file.length()/(1024*1024)+"MB");
+		
+		t1 = Instant.now();					
+		dictionnary = new Dictionary(listenner.getTerms());		
+		System.out.println("Dictionary Building [OK] "
+				+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms, entries_nb="+dictionnary.length());
+		
+		t1 = Instant.now();		
 		opsIndex = new OPSIndex(dictionnary,triples);
 		posIndex = new POSIndex(dictionnary,triples);
-		if(verbose) {
-			System.out.println("Index Build [OK] time="+Duration.between(t1,Instant.now()).toMillis()+"ms");
-		}
-		
+		System.out.print("Index Building [OK] time="+Duration.between(t1,Instant.now()).toMillis()+"ms");
+		System.out.println(" {OPS,POS} Index size="+posIndex.getLength());
 		queryParser = new StarQueryParser(dictionnary);
 	}
 	
@@ -157,34 +154,49 @@ public class RDF_StarEngine {
 	    return files;
 	}
 	
+	
+
+	
 	/**
 	 * 
 	 * @param queryDirPath
 	 * @throws IOException
 	 */
-	public void runQueryIn(String queryDirPath) throws IOException {
+	public void runQueryInDir(String queryDirPath) throws IOException {
 		
 		File queryDir = new File(queryDirPath);
-	    List<String>queriesPath = new ArrayList<>();
+		if(! queryDir.exists()) {
+			throw new FileNotFoundException(queryDirPath);
+		}
+		
+		TreeSet<String> queryFilePaths = new TreeSet<>();
 	    for(File fileName : queryDir.listFiles()) {
-	    	queriesPath.add(fileName.getName());
+	    	queryFilePaths.add(fileName.getName());
+	    }
+	    if(queryFilePaths.isEmpty()) {
+	    	throw new IllegalArgumentException("No query file found into "+queryDirPath);
 	    }
 	    
 	    createOutputFiles();
-
 	    long totalQueryingTime = 0L;
-	    int totalQueryNb = 0, totalResultsNb = 0;
-	    
-	    for(String queryPath : queriesPath) {
-	    	if(verbose) {
-	    		System.out.println(queryPath + " : ");
+	    int totalQueryNb = 0, totalResultsNb = 0;	  
+	  
+	    for(String queryPath : queryFilePaths) {
+	    	
+			List<StarQuery> queries = queryParser.readQueries(queryDirPath+queryPath);			
+			if(queries.isEmpty()) {
+				throw new IllegalArgumentException("No query found into"+queryPath);
+			}
+			if(verbose) {
+	    		System.out.println(queryPath + " : "+queries.size()+" queries to process");
 	    	}
-			List<StarQuery> queries = queryParser.readQueries(queryDirPath+queryPath);	
+			
+			int queryNb = 0;
 			for(StarQuery query : queries) {		
 				totalQueryNb++;
-				
+				queryNb++;
 				Instant queryingTime = Instant.now();				
-				Collection<Integer> results = query(query);
+				Collection<Integer> results = runStarQuery(query);
 				long ellapsedTime = Duration.between(queryingTime,Instant.now()).toMillis();
 				
 				int results_size = results != null ? results.size() : 0;
@@ -192,7 +204,7 @@ public class RDF_StarEngine {
 				totalQueryingTime += ellapsedTime;
 				
 				if(verbose) {					
-					System.out.println("\t"+query+" : "+results_size + " answers found, time="+ellapsedTime+"ms");
+					System.out.println("\t query"+queryNb+" : "+results_size + " answers found, time="+ellapsedTime+"ms");
 				}
 				if(export_results) {
 					
@@ -204,26 +216,28 @@ public class RDF_StarEngine {
 	    }
 	}
 	
+	
+	
 	/**
 	 * 
 	 * @param query
 	 * @return
 	 */
-	public Collection<Integer> query(StarQuery query){
+	public Collection<Integer> runStarQuery(StarQuery query){
 		ArrayList<Integer> queryPredIds = query.getPredicatesIds(),
 							queryObjIds = query.getObjectsIds();
 		
 			
-		if(queryPredIds.size() == 1) { // simple star query with one branch -> result all  subject from index[predId,objectId]
+		if(queryPredIds.size() == 1) { // simple star query with one branch -> result is : Index I : {PO}[S]all subjects from some index[predId,objectId]
 			Integer predId = queryPredIds.get(0), objId = queryObjIds.get(0);
-			Set<Integer> results = posIndex.get(predId,objId);	
-			return results;
+			Set<Integer> results = posIndex.get(predId,objId);
+			return results != null ? results :  new ArrayList<>();
 		}
 		
 		Collection<Integer> results = new ArrayList<>();		
 		Integer smallerSubIndex = getMostFilteringSubIndex(posIndex, queryPredIds, queryObjIds); // get smaller subIndex to join
 		if(smallerSubIndex == -1) {
-			return null;
+			return new ArrayList<>();
 		}
 		Integer srcPredId = queryPredIds.get(smallerSubIndex), 
 				srcObjId = queryObjIds.get(smallerSubIndex);

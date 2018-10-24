@@ -1,6 +1,9 @@
 package Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import Dictionary.Dictionary;
 
 public class StarQuery {
 	
@@ -8,15 +11,26 @@ public class StarQuery {
 	private ArrayList<Integer> objectsIds;
 	private ArrayList<String> predicates;
 	private ArrayList<String> objects;
+	private final static String subjectSymbol = "s";
 	
-	
-	public StarQuery(ArrayList<Integer> predicatesIds, ArrayList<Integer> objectsIds, ArrayList<String> predicates,
-			ArrayList<String> objects) {
-		super();
-		this.predicatesIds = predicatesIds;
-		this.objectsIds = objectsIds;
-		this.predicates = predicates;
-		this.objects = objects;
+	public StarQuery(ArrayList<String> predicates, ArrayList<String> objects, Dictionary dico) {
+		assert(! predicates.isEmpty());
+		assert(predicates.size() == objects.size());
+		
+		predicatesIds = new ArrayList<>(predicates.size());
+		objectsIds = new ArrayList<>(objects.size());
+		this.predicates = new ArrayList<>(predicates);
+		this.objects = new ArrayList<>(objects);
+		
+		
+		for(int i=0;i<predicates.size();i++) {
+			Integer predId = dico.getIntegerId(predicates.get(i));					
+			Integer objId = dico.getIntegerId(objects.get(i));
+			if(predId != null &&  objId != null) {
+				predicatesIds.add(predId);
+				objectsIds.add(objId);
+			}
+		}
 	}
 	
 	public ArrayList<Integer> getPredicatesIds() {
@@ -39,10 +53,16 @@ public class StarQuery {
 
 	@Override
 	public String toString() {
-		return "[predicates=" + predicatesIds.toString() + ", objects=" + objectsIds.toString() + "]";
+		StringBuilder sb=new StringBuilder("SELECT ?s WHERE {\n");
+		for(int i=0;i<predicates.size();i++) {
+			sb.append("\t?"+subjectSymbol+" <"+predicates.get(i) +"> <"+objects.get(i) +"> .\n ");
+		}
+		sb.append("}");
+		return sb.toString();
 	}
 	
-	
-	
+	public String getSubjectSymbol() {
+		return subjectSymbol;
+	}
 	
 }
