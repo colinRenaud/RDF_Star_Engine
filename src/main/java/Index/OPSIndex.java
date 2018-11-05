@@ -5,14 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-
 import Dictionary.Dictionary;
 
-public class OPSIndex extends Index{
+public class OPSIndex extends Tri_Index{
 	
-	private Map<Integer,Map<Integer,Set<Integer>>> index;
-	private int nbTriple;
 	
 	public OPSIndex(Dictionary dico, ArrayList<ArrayList<String>> triples){
 		
@@ -26,6 +22,7 @@ public class OPSIndex extends Index{
 			Integer subj = dico.getIntegerId(triples.get(0).get(i));
 			Integer pred = dico.getIntegerId(triples.get(1).get(i));
 			Integer obj = dico.getIntegerId(triples.get(2).get(i));
+			
 			index.putIfAbsent(obj, new HashMap<>());
 			Map<Integer,Set<Integer>> objMap = index.get(obj);
 			objMap.putIfAbsent(pred, new HashSet<>());
@@ -33,18 +30,6 @@ public class OPSIndex extends Index{
 			nbTriple++;
 		}
 		setLength();
-	}
-
-
-	@Override
-	public Map<Integer,Map<Integer, Set<Integer>>> getDatas() {
-		return index;
-	}
-
-
-	@Override
-	public int nbTriple() {
-		return nbTriple;
 	}
 		
 

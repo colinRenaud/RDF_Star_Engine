@@ -7,10 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import Dictionary.Dictionary;
 
-public class POSIndex extends Index{
-	
-	private Map<Integer,Map<Integer,Set<Integer>>> index;
-	private int nbTriple;
+public class POSIndex extends Tri_Index{
 	
 	public POSIndex(Dictionary dico, ArrayList<ArrayList<String>> triples){
 		
@@ -21,9 +18,11 @@ public class POSIndex extends Index{
 		nbTriple = 0;
 		
 		for(int i=0;i<triples.get(0).size();i++) {
+			
 			Integer subj = dico.getIntegerId(triples.get(0).get(i));
 			Integer pred = dico.getIntegerId(triples.get(1).get(i));
 			Integer obj = dico.getIntegerId(triples.get(2).get(i));
+			
 			index.putIfAbsent(pred, new HashMap<>());
 			Map<Integer,Set<Integer>> predMap = index.get(pred);
 			predMap.putIfAbsent(obj, new HashSet<>());
@@ -33,16 +32,5 @@ public class POSIndex extends Index{
 		setLength();
 	}
 
-	@Override
-	public Map<Integer,Map<Integer, Set<Integer>>> getDatas() {
-		return index;
-	}
-
-
-	@Override
-	public int nbTriple() {
-		return nbTriple;
-	}
-		
 
 }

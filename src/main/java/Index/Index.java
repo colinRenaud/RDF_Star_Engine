@@ -1,57 +1,40 @@
 package Index;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
-public abstract class Index {
+import Dictionary.Dictionary;
+
+public class Index {
 	
-	private long length;
+	protected Set<Integer> predicates,objects,subjects;
 	
-	abstract Map<Integer,Map<Integer,Set<Integer>>> getDatas();
-	
-	public abstract int nbTriple();
-	
-	public Set<Integer> get(Integer key1, Integer key2){
-		Map<Integer,Map<Integer,Set<Integer>>> datas = this.getDatas();
-		return datas.get(key1).get(key2);
-	}
-	
-	
+	public Index(Dictionary dico,ArrayList<ArrayList<String>> triples) {
 		
-	public static void displayDatas(Index index,OutputStream out) throws IOException{
-		StringBuilder sb = new StringBuilder();
-		Map<Integer,Map<Integer,Set<Integer>>> datas = index.getDatas();
-		for(Integer k : datas.keySet()){
+		assert(triples.size() == 3);
+		assert(triples.get(0).size()==triples.get(1).size());
+		assert(triples.get(0).size()==triples.get(2).size());
+		
+		predicates = new HashSet<>();
+		objects = new HashSet<>();
+		subjects = new HashSet<>();
 			
-			Map<Integer,Set<Integer>> v = datas.get(k);
-			for(Integer k2 : v.keySet()){
-				Set<Integer> v2 = v.get(k2);
-				for(Integer k3 : v2){
-					sb.append(k+":"+k2+":"+k3+"\n");					
-				}
-			}
-		}	
-		out.write(sb.toString().getBytes());
-	}
-	
-	protected void setLength() {
-		length = 0;
-		Map<Integer,Map<Integer,Set<Integer>>> datas = getDatas();
-		for(Integer i : datas.keySet()) {
-			for(Integer j : datas.get(i).keySet()) {
-				Set<Integer> values = datas.get(i).get(j);
-				length += values.size();
-			}
+		for(String subject : triples.get(0)) {
+			Integer subjId = dico.getIntegerId(subject);
+			subjects.add(subjId);
 		}
+		
+		for(String predicate: triples.get(1)) {
+			Integer predId = dico.getIntegerId(predicate);
+			predicates.add(predId);
+		}
+		
+		for(String object : triples.get(2)) {
+			Integer objId = dico.getIntegerId(object);
+			objects.add(objId);
+		}
+		
 	}
-
-	public long getLength() {
-		return length;
-	}
 	
-	
-	
-
 }

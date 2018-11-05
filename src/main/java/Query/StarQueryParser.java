@@ -21,7 +21,7 @@ public class StarQueryParser {
 	}
 
 
-	public List<StarQuery> readQueries(String path) throws IOException{ 
+	public List<StarQuery> readQueries(String path) throws IOException, IllegalArgumentException { 
 		
 		List<String> lines = Files.readAllLines(Paths.get(path));			
 		ArrayList<String> predicates = new ArrayList<>(), objects = new ArrayList<>();
@@ -36,18 +36,26 @@ public class StarQueryParser {
   				}
   			}
   			else if(st.contains(">")) { // Need a fast checking bc of \t
-  				st = st.replaceAll("<","");
-  				st = st.replaceAll(">","");
-				String[] parts = st.split(" ");
-				predicates.add(parts[1]);
-				objects.add(parts[2]);				
+  				int i = st.indexOf("<");
+  				int j = st.indexOf(">",i);
+  				String predicate = st.substring(i+1, j);
+  				i = st.indexOf("<",j);
+  				j = st.indexOf(">",i);
+  				String object = st.substring(i+1,j);
+  				predicates.add(predicate);
+				objects.add(object);
+//  				st = st.replaceAll("<","");
+//  				st = st.replaceAll(">","");
+//				String[] parts = st.split(" ");
+//				predicates.add(parts[0]);
+//				objects.add(parts[1]);				
   			}
   		}
   		if(! predicates.isEmpty()) { // new SPARQL query
-				StarQuery query = new StarQuery(predicates, objects, dico);
-				queries.add(query);
-				predicates.clear(); objects.clear();
-			}
+			StarQuery query = new StarQuery(predicates, objects, dico);
+			queries.add(query);
+			predicates.clear(); objects.clear();
+		}
   		return queries;
 	}
 		

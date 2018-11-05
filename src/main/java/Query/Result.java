@@ -6,11 +6,11 @@ import java.util.Collection;
 import Dictionary.Dictionary;
 
 
-public class StarQueryResult {
+public class Result {
 	
 	private ArrayList<String> results;
 	
-	public StarQueryResult(Dictionary dico, Collection<Integer> results) {
+	public Result(Dictionary dico, Collection<Integer> results) {
 		this.results = new ArrayList<>(results.size());
 		for(Integer res : results) {
 			this.results.add(dico.getStringId(res));
@@ -20,5 +20,17 @@ public class StarQueryResult {
 	public ArrayList<String> getResults(){
 		return results;
 	}
+	
+	private Long time;
+
+	public void setTime(Long time) {
+		this.time = time;
+	}
+
+	public Long getTime() {
+		return time;
+	}
+	
+	
 	
 }

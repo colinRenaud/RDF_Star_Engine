@@ -11,11 +11,15 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.io.FilenameUtils;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
@@ -23,31 +27,27 @@ import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
 
+import com.hp.hpl.jena.sparql.function.library.sqrt;
+
 import Dictionary.Dictionary;
+import Index.Tri_Index;
 import Index.Index;
 import Index.OPSIndex;
 import Index.POSIndex;
 import Query.StarQuery;
 import Query.StarQueryParser;
-import Query.StarQueryResult;
+import Query.Result;
+import Query.ResultSet;
 
 public class RDF_StarEngine {
 	
 	
 
 	private Dictionary dictionnary;
-	private Index opsIndex,posIndex;
-	private boolean verbose, export_results, export_stats, workload_time;
-	private String outputDir;
+	private Tri_Index opsIndex,posIndex;
+	private Index index;
+	private boolean verbose;
 	private StarQueryParser queryParser;
-	
-	
-	public final static String 
-			EXEC_TIME_FILE = "exec_time.csv", 
-			QUERY_STATS_FILE = "query_stats",
-			QUERY_RESULTS_FILE = "query_results.csv";
-	
-
 	/**
 	 * 
 	 * @param dataPath
@@ -57,7 +57,7 @@ public class RDF_StarEngine {
 	 * @throws IOException
 	 */
 	public RDF_StarEngine(String dataPath,String outputDir) throws RDFParseException, RDFHandlerException, IOException {
-		this(dataPath,false,false,false,false,outputDir);		
+		this(dataPath,false,false,outputDir);		
 	}
 	
 	
@@ -73,19 +73,11 @@ public class RDF_StarEngine {
 	 * @throws RDFHandlerException
 	 * @throws IOException
 	 */
-	public RDF_StarEngine(String dataPath,boolean verbose, boolean export_results, boolean export_stats, boolean workload_time,
+	public RDF_StarEngine(String dataPath,boolean verbose, boolean workload_time,
 			String outputDir) throws RDFParseException, RDFHandlerException, IOException {
-		super();
 		this.verbose = verbose;
-		this.export_results = export_results;
-		this.export_stats = export_stats;
-		this.workload_time = workload_time;
-		this.outputDir = outputDir;
 		loadData(dataPath);
-	    File outputDirFile = new File(outputDir);
-	    if(! outputDirFile.exists()) {
-	    	outputDirFile.mkdir();
-	    }
+	    
 	}
 
 
@@ -94,11 +86,11 @@ public class RDF_StarEngine {
 		return dictionnary;
 	}
 
-	public Index getOpsIndex() {
+	public Tri_Index getOpsIndex() {
 		return opsIndex;
 	}
 
-	public Index getPosIndex() {
+	public Tri_Index getPosIndex() {
 		return posIndex;
 	}
 
@@ -131,30 +123,20 @@ public class RDF_StarEngine {
 		System.out.println("Dictionary Building [OK] "
 				+"\ttime="+Duration.between(t1,Instant.now()).toMillis()+"ms, entries_nb="+dictionnary.length());
 		
+//		t1 = Instant.now();
+//		index = new Index(dictionnary, triples);
+//		System.out.println("Indexs Building [OK] time="+Duration.between(t1,Instant.now()).toMillis()+"ms");
+
 		t1 = Instant.now();		
 		opsIndex = new OPSIndex(dictionnary,triples);
 		posIndex = new POSIndex(dictionnary,triples);
-		System.out.print("Index Building [OK] time="+Duration.between(t1,Instant.now()).toMillis()+"ms");
-		System.out.println(" {OPS,POS} Index size="+posIndex.getLength());
+		System.out.println("TriIndexs Building [OK] time="+Duration.between(t1,Instant.now()).toMillis()+"ms");
+		System.out.println("\t{OPS,POS} Index size="+posIndex.getLength());
 		queryParser = new StarQueryParser(dictionnary);
+	
 	}
 	
-	private List<File> createOutputFiles() throws IOException {
-	   List<File> files = new LinkedList<>(Arrays.asList(
-			  new File(outputDir+EXEC_TIME_FILE), 
-			  new File(outputDir+QUERY_RESULTS_FILE),
-			  new File(outputDir+QUERY_STATS_FILE)));
-	   
-	    for(File file : files) {
-	    	if(file.exists()) {
-	    		file.delete(); }
-	    	
-	    	file.createNewFile();
-	    	
-	    		
-	    }
-	    return files;
-	}
+	
 	
 	
 
@@ -164,7 +146,7 @@ public class RDF_StarEngine {
 	 * @param queryDirPath
 	 * @throws IOException
 	 */
-	public void runQueryInDir(String queryDirPath) throws IOException {
+	public ResultSet runQueryInDir(String queryDirPath) throws IOException {
 		
 		File queryDir = new File(queryDirPath);
 		if(! queryDir.exists()) {
@@ -177,59 +159,49 @@ public class RDF_StarEngine {
 	    }
 	    if(queryFilePaths.isEmpty()) {
 	    	throw new IllegalArgumentException("No query file found into "+queryDirPath);
-	    }
+	    }	    	     
+	    PatriciaTrie<Result> queriesResults = new PatriciaTrie<>();
+//	    HashMap<StarQuery,Long> queriesTime = new LinkedHashMap<>();
 	    
-	    createOutputFiles();
-	    long totalQueryingTime = 0L;
-	    int totalQueryNb = 0, totalResultsNb = 0;	  
-	  
 	    for(String queryPath : queryFilePaths) {
 	    	
-			List<StarQuery> queries = queryParser.readQueries(queryDirPath+queryPath);			
-			if(queries.isEmpty()) {
-				throw new IllegalArgumentException("No query found into"+queryPath);
-			}
-			if(verbose) {
-	    		System.out.println(queryPath + " : "+queries.size()+" queries to process");
-	    	}
+	    	Instant t1 = Instant.now();
 			
-			int queryNb = 0;
-			for(StarQuery query : queries) {		
-				totalQueryNb++;
-				queryNb++;
+			List<StarQuery> queries = queryParser.readQueries(queryDirPath+queryPath);				
+			if(queries.isEmpty()) {
+				throw new IllegalArgumentException("No query found into "+queryPath);
+			}	    		
+			
+			int newResultNb = 0,uniqueQueryNb=0;
+			
+			for(StarQuery query : queries) {	
+				
 				Instant queryingTime = Instant.now();				
-				Collection<Integer> results = runStarQuery(query);
-				long ellapsedTime = Duration.between(queryingTime,Instant.now()).toMillis();
-				
-				int results_size = results != null ? results.size() : 0;
-				totalResultsNb += results_size;
-				totalQueryingTime += ellapsedTime;
-				
-				if(verbose) {					
-					System.out.println("\t query"+queryNb+" : "+results_size + " answers found, time="+ellapsedTime+"ms");
+				String queryName = query.toOutputString();			
+				Result sqr = queriesResults.get(queryName);
+
+				if(sqr == null) { // new query asked
+					Collection<Integer> results = runStarQuery(query);
+					sqr = new Result(dictionnary,results); // convert results as integers to results as strings	
+					queriesResults.put(queryName,sqr);	
+					newResultNb += results.size();
+					uniqueQueryNb++;
 				}
-				if(export_results) {
-					exportResult(query,results);
-					
-				}					
+				Duration d1 = Duration.between(queryingTime,Instant.now());
+				sqr.setTime(d1.toNanos());				
+			}		
+			
+			long pathEvalTime = Duration.between(t1, Instant.now()).toMillis();
+			if(verbose) {
+				System.out.println(queryPath+ " : \n\t"
+						+uniqueQueryNb+"/"+queries.size()+" evaluated queries, "
+						+newResultNb+" answers found,"
+						+"time="+pathEvalTime+"ms");
 			}
 	    }
-	    if(workload_time) {
-	    	System.out.println("Workload_time :"+totalQueryingTime+"ms, "+totalQueryNb+" query run ,"+totalResultsNb+" results found");
-	    }
+	    return new ResultSet(queriesResults);
 	}
 	
-	public void exportResult(StarQuery query,Collection<Integer> results) throws IOException {
-		
-		 FileWriter fw = new FileWriter(outputDir+QUERY_RESULTS_FILE,true);
-		 StarQueryResult sqr = new StarQueryResult(dictionnary,results);
-		 fw.write(query.toOutputString()+"\n\n");
-		 for(String rslt : sqr.getResults()) {
-			 fw.write(rslt+"\n");
-		 }
-		 fw.write("\n");
-		 fw.close();
-	}
 	
 	/**
 	 * 
@@ -274,7 +246,7 @@ public class RDF_StarEngine {
 					i++;
 				}
 				if(joinAllSuccess) {
-					results.add(subjId); // add subjId only if joined succes 
+					results.add(subjId); // add subjId only if join success 
 				}
 			}
 			
@@ -290,7 +262,7 @@ public class RDF_StarEngine {
 	 * @param objectIds
 	 * @return
 	 */
-	private Integer getMostFilteringSubIndex(Index index, ArrayList<Integer> predIds, ArrayList<Integer> objectIds) {
+	private Integer getMostFilteringSubIndex(Tri_Index index, ArrayList<Integer> predIds, ArrayList<Integer> objectIds) {
 		
 		Set<Integer> firstSubIndex = index.get(predIds.get(0),objectIds.get(0));
 		if(firstSubIndex == null) {

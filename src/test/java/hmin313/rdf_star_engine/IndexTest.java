@@ -22,7 +22,7 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
 
 import Dictionary.Dictionary;
-import Index.Index;
+import Index.Tri_Index;
 import Index.OPSIndex;
 import Index.POSIndex;
 
@@ -31,7 +31,7 @@ public class IndexTest {
 	private static Dictionary dico;
 	private static Collection<String> termList;
 	private static ArrayList<ArrayList<String>> triples;
-	private static Index posIndex, opsIndex;
+	private static Tri_Index posIndex, opsIndex;
 
 	
 	@BeforeClass

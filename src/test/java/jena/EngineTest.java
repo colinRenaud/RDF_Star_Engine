@@ -20,7 +20,7 @@ import org.openrdf.rio.RDFParseException;
 
 import Query.StarQuery;
 import Query.StarQueryParser;
-import Query.StarQueryResult;
+import Query.Result;
 import hmin313.rdf_star_engine.RDF_StarEngine;
 import jena.JenaQueryEngine;
 
@@ -70,6 +70,7 @@ public class EngineTest {
 		for(String queryPath : queriesPath) {
 			System.out.println("\n\n"+queryPath+" :");
 			List<StarQuery> queries = queryParser.readQueries(queryPath);	
+			assertEquals(queries.size(), 100);
 			
 			for(StarQuery query : queries) {	
 //				System.out.println("\n"+query);
@@ -82,7 +83,7 @@ public class EngineTest {
 				
 
 				if(! results.isEmpty()) {
-					StarQueryResult starQueryResult = new StarQueryResult(engine.getDictionnary(), results);
+					Result starQueryResult = new Result(engine.getDictionnary(), results);
 					starEngineResults = starQueryResult.getResults();
 					
 //					System.out.println("\trdf_star :"+results.size()+" answers found, "+ "time="+ellapsedTime+"ms [OK]");
